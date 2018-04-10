@@ -15,23 +15,30 @@ except ImportError:
 def check_ball(opencv_image, circle):
 	#print(len(opencv_image))
 	#print(len(opencv_image[0]))
-	total = 0
-	applied = 0
+	total_inside = 0
+	applied_inside = 0
+	total_outside = 0
+	applied_outside = 0
 
 	# Iterate vertically
 	for i in range(max(0, circle[1]-circle[2]), min(len(opencv_image)-1, circle[1] + circle[2])):
 		# Iterate horizontally
 		for j in range(max(0, circle[0]-circle[2]), min(len(opencv_image[0])-1, circle[0] + circle[2])):
 			distance = (i - circle[1]) * (i - circle[1]) + (j - circle[0]) * (j - circle[0])
-			if distance > circle[2] * circle[2]:
-				continue
-			total += 1
-			if opencv_image[i][j] < 50:
-				applied += 1
+			if distance <= circle[2] * circle[2]:
+				total_inside += 1
+				if opencv_image[i][j] < 50:
+					applied_inside += 1
+			else:
+				total_outside += 1
+				if opencv_image[i][j] < 50:
+					applied_outside += 1
 	#print(applied, total * 0.8)
-	if total > 0 and applied >= total * 0.9:
-		return True
-	return False
+	if total_inside == 0 or applied_inside < total_inside * 0.6:
+		return False
+	if total_outside == 0 or applied_outside > total_outside * 0.4:
+		return False
+	return True
 
 def find_ball(opencv_image, debug=False):
 	"""Find the ball in an image.
@@ -108,7 +115,7 @@ def display_circles(opencv_image, circles, best=None):
 	pil_image.show()    
 	  
 if __name__ == "__main__":
-	opencv_image = cv2.imread("./imgs/test63.bmp", cv2.COLOR_GRAY2RGB)
+	opencv_image = cv2.imread("./imgs/test65.bmp", cv2.COLOR_GRAY2RGB)
 	"""for i in range(0, len(opencv_image)):
 		for j in range(0, len(opencv_image[0])):
 			if opencv_image[i, j] < 40:
@@ -118,4 +125,4 @@ if __name__ == "__main__":
 	
 	#try to find the ball in the image
 	ball = find_ball(opencv_image)
-	display_circles(opencv_image, ball)
+	display_circles(opencv_image, [ball])
