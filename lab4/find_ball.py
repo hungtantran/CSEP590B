@@ -13,8 +13,6 @@ except ImportError:
 
 
 def check_ball(opencv_image, circle):
-	#print(len(opencv_image))
-	#print(len(opencv_image[0]))
 	total_inside = 0
 	applied_inside = 0
 	total_outside = 0
@@ -33,7 +31,6 @@ def check_ball(opencv_image, circle):
 				total_outside += 1
 				if opencv_image[i][j] < 50:
 					applied_outside += 1
-	#print(applied, total * 0.8)
 	if total_inside == 0 or applied_inside < total_inside * 0.6:
 		return False
 	if total_outside == 0 or applied_outside > total_outside * 0.4:
@@ -52,8 +49,8 @@ def find_ball(opencv_image, debug=False):
 	"""
 
 	ball = None
-	opencv_image = cv2.medianBlur(opencv_image, 9)
-	circles = cv2.HoughCircles(opencv_image,
+	new_opencv_image = cv2.medianBlur(opencv_image, 9)
+	circles = cv2.HoughCircles(new_opencv_image,
 							   cv2.HOUGH_GRADIENT,
 							   dp=1,
 							   minDist=20,
@@ -64,13 +61,10 @@ def find_ball(opencv_image, debug=False):
 	if circles is None or len(circles) == 0 or len(circles[0]) == 0:
 		return None
 	circles = np.int16(np.around(circles))
-	#print(len(circles[0]))
 	circles = circles[0]
 	for c in circles:
 		if check_ball(opencv_image, c):
 			return c
-	#return circles[0]
-	#return circles
 	return None
 
 def display_circles(opencv_image, circles, best=None):
@@ -115,14 +109,4 @@ def display_circles(opencv_image, circles, best=None):
 	pil_image.show()    
 	  
 if __name__ == "__main__":
-	opencv_image = cv2.imread("./imgs/test65.bmp", cv2.COLOR_GRAY2RGB)
-	"""for i in range(0, len(opencv_image)):
-		for j in range(0, len(opencv_image[0])):
-			if opencv_image[i, j] < 40:
-				opencv_image[i, j] = 0
-			else:
-				opencv_image[i, j] = 355"""
-	
-	#try to find the ball in the image
-	ball = find_ball(opencv_image)
-	display_circles(opencv_image, [ball])
+	pass
