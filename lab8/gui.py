@@ -74,6 +74,8 @@ class GUIWindow():
 
     def _show_particles(self, particles):
         plot_cnt = PARTICLE_MAX_SHOW if len(particles) > PARTICLE_MAX_SHOW else len(particles)
+        if plot_cnt == 0:
+            return
         draw_skip = len(particles)/plot_cnt
         line_length = 0.3
 
