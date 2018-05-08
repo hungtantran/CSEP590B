@@ -61,16 +61,19 @@ def measurement_update(particles, measured_marker_list, grid):
     xy_dst = scipy.stats.norm(0, MARKER_TRANS_SIGMA)
     rt_dst = scipy.stats.norm(0, MARKER_ROT_SIGMA)
 
+    skip = 0
+    not_skip = 0
     if len(measured_marker_list) == 0:
         return particles
     else:
         for particle in particles:
             if not grid.is_in(particle.x, particle.y):
+                skip += 1
                 weights.append(0)
                 continue
             particle_marker_list = particle.read_markers(grid)
 
-            weight = 1.0 / len(measured_marker_list)
+            weight = 1.0 / len(particles)
             if len(particle_marker_list) == 0:
                 weight = 0
             elif len(particle_marker_list) == 1 and len(measured_marker_list) == 1:
@@ -110,9 +113,16 @@ def measurement_update(particles, measured_marker_list, grid):
                           xy_dst.pdf(particle_marker_list[1][1] - measured_marker_list[1][1]) *
                           rt_dst.pdf(particle_marker_list[1][2] - measured_marker_list[1][2])))
 
+            not_skip += 1
             weights.append(weight)
             total_weight += weight
-
-    weights = [float(weight)/total_weight for weight in weights]
-    print(weights)
-    return numpy.random.choice(particles, size=len(particles), replace=True, p=weights)
+    print("%d %d" % (skip, not_skip))
+    if total_weight == 0:
+        weights = [1.0 / len(particles) for _ in particles]
+    else:
+        weights = [float(weight)/total_weight for weight in weights]
+    particles = numpy.random.choice(particles, size=len(particles), replace=True, p=weights)
+    measurement_particles = []
+    for particle in particles:
+        measurement_particles.append(Particle(particle.x, particle.y, particle.h))
+    return measurement_particles
