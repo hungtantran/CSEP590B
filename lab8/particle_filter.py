@@ -4,6 +4,7 @@ from utils import *
 from setting import *
 import random
 import scipy.stats
+import numpy.random
 
 
 def motion_update(particles, odom):
@@ -21,18 +22,11 @@ def motion_update(particles, odom):
         particle.move(
             add_odometry_noise(
                 odom,
-                heading_sigma=0,
-                trans_sigma=0
+                heading_sigma=ODOM_HEAD_SIGMA,
+                trans_sigma=ODOM_TRANS_SIGMA
             )
         )
     return particles
-
-def within(a, b, d):
-    if a + d < b:
-        return False
-    if a - d > b:
-        return False
-    return True
 
 # ------------------------------------------------------------------------
 def measurement_update(particles, measured_marker_list, grid):
@@ -64,112 +58,61 @@ def measurement_update(particles, measured_marker_list, grid):
     """
         Calculating weights
     """
-    dst = scipy.stats.multivariate_normal(
-        mean = [0, 0, 0],
-        cov = [ [MARKER_TRANS_SIGMA, 0, 0], [0, MARKER_TRANS_SIGMA, 0], [0, 0, MARKER_ROT_SIGMA] ]
-    )
     xy_dst = scipy.stats.norm(0, MARKER_TRANS_SIGMA)
     rt_dst = scipy.stats.norm(0, MARKER_ROT_SIGMA)
 
-    for particle in particles:
-        if not grid.is_in(particle.x, particle.y):
-            weights.append(0)
-            continue
-
-        """predicted_marker_list = particle.read_markers(grid)
-        if not within(len(predicted_marker_list), len(measured_marker_list), 1):
-            weights.append(0.1)
-            total_weight += 0.1
-            #print("Remove 1 %d %d" % (len(predicted_marker_list), len(measured_marker_list)))
-            continue
-
-        weight = 0.1
-        if len(predicted_marker_list) == len(measured_marker_list):
-            weight += 0.1"""
-
-        marker_list = []
-        for i, marker in enumerate(grid.markers):
-            m_x, m_y, m_h = parse_marker_info(marker[0], marker[1], marker[2])
-            mr_x, mr_y = rotate_point(m_x - particle.x, m_y - particle.y, -particle.h)
-            mr_h = diff_heading_deg(m_h, particle.h)
-            marker_list.append((mr_x, mr_y, mr_h, i))
-
-        #print("%s\n %s\n" % (measured_marker_list, marker_list))
-        weight = 0
-        max_fit_markers = []
-        max_probs = []
-        for measured_marker in measured_marker_list:
-            max_prob = -1
-            max_fit_marker = None
-            for marker in marker_list:
-                prob = dst.pdf([
-                    measured_marker[0] - marker[0],
-                    measured_marker[1] - marker[1],
-                    measured_marker[2] - marker[2]
-                ])
-                if prob > max_prob:
-                    max_prob = prob
-                    max_fit_marker = marker
-            max_fit_markers.append(max_fit_marker)
-            max_probs.append(max_prob)
-
-        for prob in max_probs:
-            weight += prob
-        if len(max_probs) > 0:
-            weight = float(weight)/len(max_probs)
-
-        #weight += xy_dst.pdf(measured_marker[0] - marker[0])
-        #weight += xy_dst.pdf(measured_marker[1] - marker[1])
-        #weight += rot_dst.pdf(measured_marker[2] - marker[2])
-        """prob = dst.pdf([
-            measured_marker[0] - marker[0],
-            measured_marker[1] - marker[1],
-            measured_marker[2] - marker[2]
-        ])
-        weight += prob
-        if measured_marker[3] == marker[3]:
-            print("%s %s %s" % (measured_marker, marker, prob))"""
-        #print(weight)
-        """if not within(measured_marker[0], marker[0], MARKER_TRANS_SIGMA * 10):
-            #print("Remove 2")
-            continue
-
-        if not within(measured_marker[1], marker[1], MARKER_TRANS_SIGMA * 10):
-            #print("Remove 3")
-            continue
-
-        if not within(measured_marker[2], marker[2], MARKER_ROT_SIGMA * 10):
-            #print("Remove 4")
-            continue
-
-        found = True
-
-        if not found:
-            weight = 0.2
-            break"""
-
-        weights.append(weight)
-        total_weight += weight
-    if total_weight == 0:
-        weights = [float(1)/len(weights) for _ in weights]
+    if len(measured_marker_list) == 0:
+        return particles
     else:
-        weights = [float(weight)/total_weight for weight in weights]
-    print("%s %s " % (total_weight, measured_marker_list))
+        for particle in particles:
+            if not grid.is_in(particle.x, particle.y):
+                weights.append(0)
+                continue
+            particle_marker_list = particle.read_markers(grid)
 
-    """
-        Resampling
-    """
-    measured_particles = []
-    while True:
-        for index, weight in enumerate(weights):
-            # Find enough sample, return            
-            if len(measured_particles) == len(particles):
-                return measured_particles
-            # Sampling
-            rand = random.random()
-            if rand <= weight:
-                measured_particles.append(particles[index])
-    # Should never reach here
-    return None
+            weight = 1.0 / len(measured_marker_list)
+            if len(particle_marker_list) == 0:
+                weight = 0
+            elif len(particle_marker_list) == 1 and len(measured_marker_list) == 1:
+                weight = (xy_dst.pdf(particle_marker_list[0][0] - measured_marker_list[0][0]) *
+                          xy_dst.pdf(particle_marker_list[0][1] - measured_marker_list[0][1]) *
+                          rt_dst.pdf(particle_marker_list[0][2] - measured_marker_list[0][2]))
+            elif len(particle_marker_list) == 1 and len(measured_marker_list) == 2:
+                weight = (xy_dst.pdf(particle_marker_list[0][0] - measured_marker_list[0][0]) *
+                          xy_dst.pdf(particle_marker_list[0][1] - measured_marker_list[0][1]) *
+                          rt_dst.pdf(particle_marker_list[0][2] - measured_marker_list[0][2])
+                          *
+                          xy_dst.pdf(particle_marker_list[0][0] - measured_marker_list[1][0]) *
+                          xy_dst.pdf(particle_marker_list[0][1] - measured_marker_list[1][1]) *
+                          rt_dst.pdf(particle_marker_list[0][2] - measured_marker_list[1][2]))
+            elif len(particle_marker_list) == 2 and len(measured_marker_list) == 1:
+                weight = (xy_dst.pdf(particle_marker_list[0][0] - measured_marker_list[0][0]) *
+                          xy_dst.pdf(particle_marker_list[0][1] - measured_marker_list[0][1]) *
+                          rt_dst.pdf(particle_marker_list[0][2] - measured_marker_list[0][2])
+                          +
+                          xy_dst.pdf(particle_marker_list[1][0] - measured_marker_list[0][0]) *
+                          xy_dst.pdf(particle_marker_list[1][1] - measured_marker_list[0][1]) *
+                          rt_dst.pdf(particle_marker_list[1][2] - measured_marker_list[0][2]))
+            elif len(particle_marker_list) == 2 and len(measured_marker_list) == 2:
+                weight = ((xy_dst.pdf(particle_marker_list[0][0] - measured_marker_list[0][0]) *
+                          xy_dst.pdf(particle_marker_list[0][1] - measured_marker_list[0][1]) *
+                          rt_dst.pdf(particle_marker_list[0][2] - measured_marker_list[0][2])
+                          +
+                          xy_dst.pdf(particle_marker_list[1][0] - measured_marker_list[0][0]) *
+                          xy_dst.pdf(particle_marker_list[1][1] - measured_marker_list[0][1]) *
+                          rt_dst.pdf(particle_marker_list[1][2] - measured_marker_list[0][2]))
+                          *
+                          (xy_dst.pdf(particle_marker_list[0][0] - measured_marker_list[1][0]) *
+                          xy_dst.pdf(particle_marker_list[0][1] - measured_marker_list[1][1]) *
+                          rt_dst.pdf(particle_marker_list[0][2] - measured_marker_list[1][2])
+                          +
+                          xy_dst.pdf(particle_marker_list[1][0] - measured_marker_list[1][0]) *
+                          xy_dst.pdf(particle_marker_list[1][1] - measured_marker_list[1][1]) *
+                          rt_dst.pdf(particle_marker_list[1][2] - measured_marker_list[1][2])))
 
+            weights.append(weight)
+            total_weight += weight
 
+    weights = [float(weight)/total_weight for weight in weights]
+    print(weights)
+    return numpy.random.choice(particles, size=len(particles), replace=True, p=weights)
