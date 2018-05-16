@@ -25,7 +25,7 @@ Use_GUI = True
 # 1. Robot move forward, if hit an obstacle, robot bounces to a random direction
 # 2. Robot move as a circle (This is the motion autograder uses)
 # This is the flag to enable circle motion or not
-Move_circular = False
+Move_circular = True
 
 # robot moving speed (grid per move)
 Robot_speed = 0.5
@@ -80,11 +80,22 @@ class ParticleFilter:
 
         # ---------- Move Robot and get odometry ----------
         if Move_circular:
-            odom = add_odometry_noise(move_robot_circular(self.robbie, Dh_circular, Robot_speed, self.grid), \
-                heading_sigma=ODOM_HEAD_SIGMA, trans_sigma=ODOM_TRANS_SIGMA)
+            odom = add_odometry_noise(
+                move_robot_circular(
+                    self.robbie,
+                    Dh_circular,
+                    Robot_speed,
+                    self.grid),
+                heading_sigma=ODOM_HEAD_SIGMA,
+                trans_sigma=ODOM_TRANS_SIGMA)
         else:
-            odom = add_odometry_noise(move_robot_forward(self.robbie, Robot_speed, self.grid), \
-                heading_sigma=ODOM_HEAD_SIGMA, trans_sigma=ODOM_TRANS_SIGMA)
+            odom = add_odometry_noise(
+                move_robot_forward(
+                    self.robbie,
+                    Robot_speed,
+                    self.grid),
+                heading_sigma=ODOM_HEAD_SIGMA,
+                trans_sigma=ODOM_TRANS_SIGMA)
 
         print('\nrobot :', self.robbie)
         print('odometry measured :', odom)
@@ -131,6 +142,7 @@ class ParticleFilterThread(threading.Thread):
             self.gui.show_mean(estimated[0], estimated[1], estimated[2], estimated[3])
             self.gui.show_robot(self.filter.robbie)
             self.gui.updated.set()
+            #time.sleep(0.5)
 
 
 if __name__ == "__main__":
@@ -138,6 +150,7 @@ if __name__ == "__main__":
     
     # initial distribution assigns each particle an equal probability
     particles = Particle.create_random(PARTICLE_COUNT, grid)
+    #particles = [Particle(Robot_init_pose[0], Robot_init_pose[1], Robot_init_pose[2])]
     robbie = Robot(Robot_init_pose[0], Robot_init_pose[1], Robot_init_pose[2])
     particlefilter = ParticleFilter(particles, robbie, grid)
 

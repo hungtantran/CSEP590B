@@ -41,16 +41,14 @@ def cozmo_go_to_pose(robot, x, y, angle_z):
 
 # Functions to be defined as part of the labs
 
-def get_front_wheel_radius():
+def get_front_wheel_radius(robot):
 	"""Returns the radius of the Cozmo robot's front wheel in millimeters."""
-	# ####
-	# TODO: Empirically determine the radius of the robot's front wheel using the
-	# cozmo_drive_straight() function. You can write a separate script for doing 
-	# experiments to determine the radius. This function should return the radius
-	# in millimeters. Write a comment that explains how you determined it and any
-	# computation you do as part of this function.
-	# ####
-	pass
+	# To calculate the front wheel radius, I retried using the cozmo_drive_straight
+	# method multiple time with different dist parameter, trying to get the front
+	# wheel to turn a full circle. In that case, I knew that the dist = circumference
+	# of the frontend. I found that the circumference of the wheel is 85mm so its
+	# radius is 85mm / (2 * pi) = 13.528
+	return 13.528
 
 def get_distance_between_wheels():
 	"""Returns the distance between the wheels of the Cozmo robot in millimeters."""
@@ -59,6 +57,11 @@ def get_distance_between_wheels():
 	# robot.drive_wheels() function. Write a comment that explains how you determined
 	# it and any computation you do as part of this function.
 	# ####
+	# From the formula in class, we can derive that:
+	#   distance_between_wheels = (distance_left - distance_right) / angle
+	# After multiple tries, I got that running drive_wheels(50, 25, duration=6.4)
+	# made the robot turn a right angle (90 degree, pi/2 radian)
+	# So distance_between_wheels = (50*6.4 - 25*6.4) / (pi/2)
 	pass
 
 def rotate_front_wheel(robot, angle_deg):
@@ -142,12 +145,13 @@ def my_go_to_pose3(robot, x, y, angle_z):
 
 def run(robot: cozmo.robot.Robot):
 
-	print("***** Front wheel radius: " + str(get_front_wheel_radius()))
+	print("***** Front wheel radius: " + str(get_front_wheel_radius(robot)))
 	print("***** Distance between wheels: " + str(get_distance_between_wheels()))
 
 	## Example tests of the functions
 
-	cozmo_drive_straight(robot, 62, 50)
+	robot.drive_wheels(50, 25, duration=6.4)
+	"""cozmo_drive_straight(robot, 85, 10)
 	cozmo_turn_in_place(robot, 60, 30)
 	cozmo_go_to_pose(robot, 100, 100, 45)
 
@@ -157,7 +161,7 @@ def run(robot: cozmo.robot.Robot):
 
 	my_go_to_pose1(robot, 100, 100, 45)
 	my_go_to_pose2(robot, 100, 100, 45)
-	my_go_to_pose3(robot, 100, 100, 45)
+	my_go_to_pose3(robot, 100, 100, 45)"""
 
 
 if __name__ == '__main__':

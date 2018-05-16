@@ -56,16 +56,28 @@ class Particle(object):
                     rh -- marker's relative heading in robot's frame, in degree
         """
         marker_list = []
-        for marker in grid.markers:
+        for i, marker in enumerate(grid.markers):
             m_x, m_y, m_h = parse_marker_info(marker[0], marker[1], marker[2])
             # rotate marker into robot frame
             mr_x, mr_y = rotate_point(m_x - self.x, m_y - self.y, -self.h)
             if math.fabs(math.degrees(math.atan2(mr_y, mr_x))) < ROBOT_CAMERA_FOV_DEG / 2.0:
                 mr_h = diff_heading_deg(m_h, self.h)
-                marker_list.append((mr_x, mr_y, mr_h))
+                marker_list.append((mr_x, mr_y, mr_h, i))
         return marker_list
 
+    def move(self, odom):
+        """ Move the robot with a steering angle and dist drive forward.
+            Note that the robot *drive first, then turn head*.
 
+            Arguments:
+            odom -- odometry to move (dx, dy, dh) in *robot local frame*
+        
+            No return
+        """
+        dx, dy = rotate_point(odom[0], odom[1], self.h)
+        self.x += dx
+        self.y += dy
+        self.h = self.h + odom[2]
 
 """ Robot class
     A class for robot, contains same x, y, and heading information as particles
@@ -99,23 +111,7 @@ class Robot(Particle):
                     ry -- marker's relative Y coordinate in robot's frame
                     rh -- marker's relative heading in robot's frame, in degree
         """
-        return super(Robot, self).read_markers(grid)
-
-    def move(self, odom):
-        """ Move the robot with a steering angle and dist drive forward.
-            Note that the robot *drive first, then turn head*.
-
-            Arguments:
-            odom -- odometry to move (dx, dy, dh) in *robot local frame*
-        
-            No return
-        """
-        
-        dx, dy = rotate_point(odom[0], odom[1], self.h)
-        self.x += dx
-        self.y += dy
-        self.h = self.h + odom[2]
-        
+        return super(Robot, self).read_markers(grid)   
 
     def check_collsion(self, odom, grid):
         """ Check whether moving the robot will cause collision.

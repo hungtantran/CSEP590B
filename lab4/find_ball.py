@@ -12,6 +12,31 @@ except ImportError:
 	sys.exit('install Pillow to run this code')
 
 
+def check_ball(opencv_image, circle):
+	total_inside = 0
+	applied_inside = 0
+	total_outside = 0
+	applied_outside = 0
+
+	# Iterate vertically
+	for i in range(max(0, circle[1]-circle[2]), min(len(opencv_image)-1, circle[1] + circle[2])):
+		# Iterate horizontally
+		for j in range(max(0, circle[0]-circle[2]), min(len(opencv_image[0])-1, circle[0] + circle[2])):
+			distance = (i - circle[1]) * (i - circle[1]) + (j - circle[0]) * (j - circle[0])
+			if distance <= circle[2] * circle[2]:
+				total_inside += 1
+				if opencv_image[i][j] < 50:
+					applied_inside += 1
+			else:
+				total_outside += 1
+				if opencv_image[i][j] < 50:
+					applied_outside += 1
+	if total_inside == 0 or applied_inside < total_inside * 0.6:
+		return False
+	if total_outside == 0 or applied_outside > total_outside * 0.4:
+		return False
+	return True
+
 def find_ball(opencv_image, debug=False):
 	"""Find the ball in an image.
 		
@@ -24,11 +49,23 @@ def find_ball(opencv_image, debug=False):
 	"""
 
 	ball = None
-	
-	## TODO: INSERT YOUR SOLUTION HERE
-	
-	return ball
-
+	new_opencv_image = cv2.medianBlur(opencv_image, 9)
+	circles = cv2.HoughCircles(new_opencv_image,
+							   cv2.HOUGH_GRADIENT,
+							   dp=1,
+							   minDist=20,
+							   param1=50,
+							   param2=30,
+							   minRadius=0,
+							   maxRadius=0)
+	if circles is None or len(circles) == 0 or len(circles[0]) == 0:
+		return None
+	circles = np.int16(np.around(circles))
+	circles = circles[0]
+	for c in circles:
+		if check_ball(opencv_image, c):
+			return c
+	return None
 
 def display_circles(opencv_image, circles, best=None):
 	"""Display a copy of the image with superimposed circles.
@@ -53,8 +90,8 @@ def display_circles(opencv_image, circles, best=None):
 		# draw the center of the circle
 		cv2.circle(circle_image,(c[0],c[1]),2,(0,255,255),3) 
 		# write coords
-		cv2.putText(circle_image,str(c),(c[0],c[1]),cv2.FONT_HERSHEY_SIMPLEX,
-					.5,(255,255,255),2,cv2.LINE_AA)            
+		#cv2.putText(circle_image,str(c),(c[0],c[1]),cv2.FONT_HERSHEY_SIMPLEX,
+		#			.5,(255,255,255),2,cv2.LINE_AA)            
 	
 	#highlight the best circle in a different color
 	if best is not None:
@@ -63,8 +100,8 @@ def display_circles(opencv_image, circles, best=None):
 		# draw the center of the circle
 		cv2.circle(circle_image,(best[0],best[1]),2,(0,0,255),3) 
 		# write coords
-		cv2.putText(circle_image,str(best),(best[0],best[1]),cv2.FONT_HERSHEY_SIMPLEX,
-					.5,(255,255,255),2,cv2.LINE_AA)            
+		#cv2.putText(circle_image,str(best),(best[0],best[1]),cv2.FONT_HERSHEY_SIMPLEX,
+		#			.5,(255,255,255),2,cv2.LINE_AA)            
 		
 	
 	#display the image

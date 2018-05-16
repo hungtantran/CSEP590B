@@ -78,4 +78,5 @@ def add_odometry_noise(odom_act, heading_sigma, trans_sigma):
 def add_marker_measurement_noise(marker_measured, trans_sigma, rot_sigma):
     return (add_gaussian_noise(marker_measured[0], trans_sigma), \
         add_gaussian_noise(marker_measured[1], trans_sigma), \
-        add_gaussian_noise(marker_measured[2], rot_sigma))
+        add_gaussian_noise(marker_measured[2], rot_sigma),
+        marker_measured[3])
