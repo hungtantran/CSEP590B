@@ -64,7 +64,6 @@ class CozGrid:
         neighbor = []
         x = coord[0]
         y = coord[1]
-
         for i in range(-1,2,1):
             for j in range(-1,2,1):
                 n = (x + i, y + j)

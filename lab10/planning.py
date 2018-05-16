@@ -1,4 +1,3 @@
-
 #author1:
 #author2:
 
@@ -25,7 +24,7 @@ def astar(grid, heuristic):
     # The set of currently discovered nodes that are not evaluated yet.
     #/ Initially, only the start node is known.
     start = grid.getStart()
-    openSet = [ start ]
+    openSet = [start]
 
     # For each node, which node it can most efficiently be reached from.
     # If a node can be reached from many nodes, cameFrom will eventually contain the
@@ -49,39 +48,50 @@ def astar(grid, heuristic):
     goal = goals[0]
     fScore[start] = heuristic(start, goal)
 
-    while openSet is not empty
-        current = the node in openSet having the lowest fScore[] value
-        if current = goal
-            return reconstruct_path(cameFrom, current)
+    while openSet:
+        # current = the node in openSet having the lowest fScore[] value
+        current = None
+        for node in openSet:
+            if current == None or fScore[current] > fScore[node]:
+                current = node
+        grid.addVisited(current)
+        
+        if current == goal:
+            grid.setPath(reconstruct_path(cameFrom, current))
+            return
 
         openSet.remove(current)
-        closedSet.Add(current)
+        closedSet.append(current)
 
-        for each neighbor of current
-            if neighbor in closedSet
-                continue		// Ignore the neighbor which is already evaluated.
+        neighbors = grid.getNeighbors(current)
+        for neighbor in neighbors:
+            if neighbor[0] in closedSet:
+                # Ignore the neighbor which is already evaluated.
+                continue		
 
-            if neighbor not in openSet	// Discover a new node
-                openSet.Add(neighbor)
+            # Discover a new node
+            if neighbor[0] not in openSet:
+                openSet.append(neighbor[0])
             
-            // The distance from start to a neighbor
-            //the "dist_between" function may vary as per the solution requirements.
-            tentative_gScore := gScore[current] + dist_between(current, neighbor)
-            if tentative_gScore >= gScore[neighbor]
-                continue		// This is not a better path.
+            # The distance from start to a neighbor
+            # the "dist_between" function may vary as per the solution requirements.
+            tentative_gScore = gScore[current] + neighbor[1]
+            if (neighbor[0] in gScore) and (tentative_gScore >= gScore[neighbor[0]]):
+                # This is not a better path
+                continue
 
-            // This path is the best until now. Record it!
-            cameFrom[neighbor] := current
-            gScore[neighbor] := tentative_gScore
-            fScore[neighbor] := gScore[neighbor] + heuristic_cost_estimate(neighbor, goal) 
+            # This path is the best until now. Record it!
+            cameFrom[neighbor[0]] = current
+            gScore[neighbor[0]] = tentative_gScore
+            fScore[neighbor[0]] = gScore[neighbor[0]] + heuristic(neighbor[0], goal) 
 
-    return failure
+    return
 
-def reconstruct_path(cameFrom, current)
+def reconstruct_path(cameFrom, current):
     total_path = [current]
     while current in cameFrom:
         current = cameFrom[current]
-        total_path.append(current)
+        total_path = [current] + total_path
     return total_path
 
 
@@ -93,7 +103,16 @@ def heuristic(current, goal):
         goal -- desired goal cell
     """
         
-    return 1 # Your code here
+    #return math.sqrt(math.pow(goal[0] - current[0], 2) + math.pow(goal[1] - current[1], 2))
+    height = abs(goal[0] - current[0])
+    width = abs(goal[1] - current[1])
+    min = height
+    max = width
+    if min > max:
+        min = width
+        max = height
+    heuristic_score = min * math.sqrt(2) + (max - min)
+    return heuristic_score
 
 
 def cozmoBehavior(robot: cozmo.robot.Robot):
