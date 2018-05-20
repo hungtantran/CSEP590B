@@ -12,7 +12,7 @@ from skimage import io, feature, filters, exposure, color
 class ImageClassifier:
     
     def __init__(self):
-        self.classifer = svm.SVC(gamma=0.001, C=100.)
+        self.classifer = svm.SVC(kernel='poly')
 
     def imread_convert(self, f):
         return io.imread(f).astype(np.uint8)
@@ -59,7 +59,6 @@ class ImageClassifier:
                     for color in pixel:
                         image_data.append(color)
             feature_data.append(image_data)"""
-
         return feature_data
 
     def train_classifier(self, train_data, train_labels):
@@ -71,7 +70,7 @@ class ImageClassifier:
         ######## YOUR CODE HERE
         ########################
         #print(train_labels) # Array of ['drone', 'plane', 'truck', ...]
-        self.classifer.fit(train_data[:10], train_labels[:10])
+        self.classifer.fit(train_data, train_labels)
 
     def predict_labels(self, data):
         # Please do not modify the header
