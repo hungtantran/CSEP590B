@@ -4,6 +4,7 @@
 #### Your name: Hung Tran
 ##############
 
+import cv2
 import numpy as np
 import re
 from sklearn import svm, metrics
@@ -12,7 +13,7 @@ from skimage import io, feature, filters, exposure, color
 class ImageClassifier:
     
     def __init__(self):
-        self.classifer = svm.SVC(kernel='poly')
+        self.classifer = svm.SVC(kernel='linear')
 
     def imread_convert(self, f):
         return io.imread(f).astype(np.uint8)
@@ -48,17 +49,28 @@ class ImageClassifier:
         # print(len(data[0][0])) # Size 320 = Width. Each is a pixel
         # print(len(data[0][0][0])) # Size 3. Each is one of RGB
         # print(data.shape) # Output: (196, 240, 320, 3)
+
+        # Gaussian filter
         num, nRow, nWidth, nColor = data.shape
-        feature_data = data.reshape((num, nRow * nWidth * nColor))
-        print(feature_data.shape)
-        """feature_data = []
+        #print(data[0][0][0])
+        feature_data = []
         for image in data:
-            image_data = []
-            for row in image:
-                for pixel in row:
-                    for color in pixel:
-                        image_data.append(color)
-            feature_data.append(image_data)"""
+            gaussian_filtered_image = filters.gaussian(image, sigma=0.4)
+            gaussian_filtered_image = color.rgb2gray(gaussian_filtered_image)
+
+            hog_feature = feature.hog(
+                gaussian_filtered_image,
+                orientations=8,
+                pixels_per_cell=(16, 16),
+                cells_per_block=(1, 1))
+            feature_data.append(hog_feature)
+        feature_data = np.array(feature_data)
+        print(feature_data.shape)
+        #print(feature_data[0][0][0])
+        #feature_data = feature_data.reshape((num, nRow * nWidth * nColor))
+        #print(feature_data.shape)
+
+        # Hog
         return feature_data
 
     def train_classifier(self, train_data, train_labels):
