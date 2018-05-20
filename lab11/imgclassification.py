@@ -71,7 +71,7 @@ class ImageClassifier:
         ######## YOUR CODE HERE
         ########################
         #print(train_labels) # Array of ['drone', 'plane', 'truck', ...]
-        self.classifer.fit(train_data, train_labels)
+        self.classifer.fit(train_data[:10], train_labels[:10])
 
     def predict_labels(self, data):
         # Please do not modify the header
