@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ##############
-#### Your name:
+#### Your name: Hung Tran
 ##############
 
 import numpy as np
@@ -12,7 +12,7 @@ from skimage import io, feature, filters, exposure, color
 class ImageClassifier:
     
     def __init__(self):
-        self.classifer = None
+        self.classifer = svm.SVC(gamma=0.001, C=100.)
 
     def imread_convert(self, f):
         return io.imread(f).astype(np.uint8)
@@ -25,12 +25,12 @@ class ImageClassifier:
         data = io.concatenate_images(ic)
         
         #extract labels from image names
-        labels = np.array(ic.files)
+        labels = np.array(ic. files)
         for i, f in enumerate(labels):
             m = re.search("_", f)
             labels[i] = f[len(dir):m.start()]
         
-        return(data,labels)
+        return (data, labels)
 
     def extract_image_features(self, data):
         # Please do not modify the header above
@@ -42,7 +42,25 @@ class ImageClassifier:
         ########################
         
         # Please do not modify the return type below
-        return(feature_data)
+        # All arrays of type numpy.ndarray
+        # print(len(data)) # Each is an image
+        # print(len(data[0])) # Size: 240 = Height. Each is a row
+        # print(len(data[0][0])) # Size 320 = Width. Each is a pixel
+        # print(len(data[0][0][0])) # Size 3. Each is one of RGB
+        # print(data.shape) # Output: (196, 240, 320, 3)
+        num, nRow, nWidth, nColor = data.shape
+        feature_data = data.reshape((num, nRow * nWidth * nColor))
+        print(feature_data.shape)
+        """feature_data = []
+        for image in data:
+            image_data = []
+            for row in image:
+                for pixel in row:
+                    for color in pixel:
+                        image_data.append(color)
+            feature_data.append(image_data)"""
+
+        return feature_data
 
     def train_classifier(self, train_data, train_labels):
         # Please do not modify the header above
@@ -52,6 +70,8 @@ class ImageClassifier:
         ########################
         ######## YOUR CODE HERE
         ########################
+        #print(train_labels) # Array of ['drone', 'plane', 'truck', ...]
+        self.classifer.fit(train_data, train_labels)
 
     def predict_labels(self, data):
         # Please do not modify the header
@@ -64,6 +84,8 @@ class ImageClassifier:
         ########################
         
         # Please do not modify the return type below
+        #predicted_labels = ['truck'] * len(data)
+        predicted_labels = self.classifer.predict(data)
         return predicted_labels
 
       
