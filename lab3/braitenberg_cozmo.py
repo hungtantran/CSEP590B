@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-'''Make Cozmo behave like a Braitenberg machine with virtual light sensors and wheels as actuators.
+'''Make Cozmo behave like a Braitenberg machine with virtual light sensors and
+   wheels as actuators.
 
 The following is the starter code for lab.
 '''
@@ -15,7 +16,6 @@ import sys
 
 def sense_brightness(image, columns):
 	'''Maps a sensor reading to a wheel motor command'''
-	## TODO: Test that this function works and decide on the number of columns to use
 	h = image.shape[0]
 	w = image.shape[1]
 	avg_brightness = 0
@@ -42,23 +42,23 @@ async def braitenberg_machine(robot: cozmo.robot.Robot):
 	print("Press CTRL-C to quit")
 
 	while True:
-		
 		#get camera image
-		event = await robot.world.wait_for(cozmo.camera.EvtNewRawCameraImage, timeout=30)
+		event = await robot.world.wait_for(
+			cozmo.camera.EvtNewRawCameraImage, timeout=30)
 
-		#convert camera image to opencv format
+		# convert camera image to opencv format
 		opencv_image = cv2.cvtColor(np.asarray(event.image), cv2.COLOR_RGB2GRAY)
 		# Determine the w/h of the new image
 		h = opencv_image.shape[0]
 		w = opencv_image.shape[1]
 		sensor_n_columns = 160
 
-		# Sense the current brightness values on the right and left of the image.
-		sensor_right = sense_brightness(opencv_image, columns=np.arange(sensor_n_columns))
-		sensor_left = sense_brightness(opencv_image, columns=np.arange(w-sensor_n_columns, w))
-
-		#print("sensor_right: " + str(sensor_right))
-		#print("sensor_left: " + str(sensor_left))
+		# Sense the current brightness values on the right and left of the
+		# image.
+		sensor_right = sense_brightness(
+			opencv_image, columns=np.arange(sensor_n_columns))
+		sensor_left = sense_brightness(
+			opencv_image, columns=np.arange(w-sensor_n_columns, w))
 
 		# Map the sensors to actuators
 		## TODO: You might want to switch which sensor is mapped to which motor.
@@ -75,4 +75,5 @@ async def braitenberg_machine(robot: cozmo.robot.Robot):
 		time.sleep(.1)
 
 
-cozmo.run_program(braitenberg_machine, use_viewer=True, force_viewer_on_top=True)
+cozmo.run_program(
+	braitenberg_machine, use_viewer=True, force_viewer_on_top=True)

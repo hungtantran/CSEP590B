@@ -44,18 +44,12 @@ class ImageClassifier:
         
         # Please do not modify the return type below
         # All arrays of type numpy.ndarray
-        # print(len(data)) # Each is an image
-        # print(len(data[0])) # Size: 240 = Height. Each is a row
-        # print(len(data[0][0])) # Size 320 = Width. Each is a pixel
-        # print(len(data[0][0][0])) # Size 3. Each is one of RGB
-        # print(data.shape) # Output: (196, 240, 320, 3)
 
         # Gaussian filter
         num, nRow, nWidth, nColor = data.shape
-        #print(data[0][0][0])
         feature_data = []
         for image in data:
-            gaussian_filtered_image = filters.gaussian(image, sigma=0.4)
+            gaussian_filtered_image = filters.gaussian(image, sigma=0.6)
             gaussian_filtered_image = color.rgb2gray(gaussian_filtered_image)
 
             hog_feature = feature.hog(
@@ -65,10 +59,6 @@ class ImageClassifier:
                 cells_per_block=(1, 1))
             feature_data.append(hog_feature)
         feature_data = np.array(feature_data)
-        print(feature_data.shape)
-        #print(feature_data[0][0][0])
-        #feature_data = feature_data.reshape((num, nRow * nWidth * nColor))
-        #print(feature_data.shape)
 
         # Hog
         return feature_data
@@ -81,7 +71,6 @@ class ImageClassifier:
         ########################
         ######## YOUR CODE HERE
         ########################
-        #print(train_labels) # Array of ['drone', 'plane', 'truck', ...]
         self.classifer.fit(train_data, train_labels)
 
     def predict_labels(self, data):
@@ -95,13 +84,11 @@ class ImageClassifier:
         ########################
         
         # Please do not modify the return type below
-        #predicted_labels = ['truck'] * len(data)
         predicted_labels = self.classifer.predict(data)
         return predicted_labels
 
       
 def main():
-
     img_clf = ImageClassifier()
 
     # load images
