@@ -48,7 +48,6 @@ class ValueIterationAgent(ValueEstimationAgent):
         for _ in range(self.iterations):
             next_values = util.Counter()
             for state in mdp.getStates():
-                # e.g ['east', 'west', 'north', 'south']
                 val = None
                 for action in mdp.getPossibleActions(state):
                     q_value = self.computeQValueFromValues(state, action)
