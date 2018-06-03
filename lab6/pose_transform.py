@@ -10,17 +10,28 @@ import cozmo
 import numpy
 from cozmo.util import degrees
 import time
+import math
 
-def get_relative_pose(object_pose, reference_frame_pose):
-	#print("wtf 1 %s" % reference_frame_pose.position)
-	#print("wtf 2 %s" % reference_frame_pose.rotation.angle_z)
+def get_relative_pose(obj_pose, ref_pose):
+	new_angle_z = obj_pose.rotation.angle_z - ref_pose.rotation.angle_z
 
-	new_angle_z = object_pose.rotation.angle_z + reference_frame_pose.rotation.angle_z
-	new_pose = reference_frame_pose.define_pose_relative_this(object_pose)
-	print("wtf 3 %s %s" % (new_pose.rotation.angle_z, new_angle_z))
-	print("wtf 4 %s" % (new_pose.position))
-	print("")
-	return None
+	ref_pos = ref_pose.position
+	obj_pos = obj_pose.position
+
+	distance = math.sqrt(
+		math.pow(ref_pos.x - obj_pos.x, 2) +
+		math.pow(ref_pos.y - obj_pos.y, 2)
+	)
+	angle = math.radians(90 + ref_pose.rotation.angle_z.degrees - math.degrees(
+		math.atan((obj_pos.y - ref_pos.y)/(obj_pos.x - ref_pos.x))))
+	rel_x = distance * math.sin(angle)
+	rel_y = distance * math.cos(angle)
+	new_pos = cozmo.util.Position(rel_x, rel_y, 0)
+
+	rel_pose = cozmo.util.Pose(
+		rel_x, rel_y, 0,
+		angle_z=new_angle_z)
+	return rel_pose
 
 def find_relative_cube_pose(robot: cozmo.robot.Robot):
 	'''Looks for a cube while sitting still, prints the pose of the detected cube
