@@ -11,7 +11,7 @@ import math
 import time
 import sys
 
-from odometry import cozmo_go_to_pose
+from odometry import cozmo_go_to_pose, my_go_to_pose1
 sys.path.insert(0, '../lab6')
 from pose_transform import get_relative_pose
 
@@ -39,7 +39,20 @@ def move_relative_to_cube(robot: cozmo.robot.Robot):
 	# desired robot pose relative to the robot's current pose and then use
 	# one of the go_to_pose functions you implemented in Lab 6.
 	# ####
-
+	desired_robot_pose = Pose(
+		cube.pose.position.x + desired_pose_relative_to_cube.position.x,
+		cube.pose.position.y + desired_pose_relative_to_cube.position.y,
+		0,
+		angle_z = degrees(
+			cube.pose.rotation.angle_z.degrees +
+			desired_pose_relative_to_cube.rotation.angle_z.degrees)
+	)
+	desired_robot_relative_pose = get_relative_pose(desired_robot_pose, robot.pose)
+	my_go_to_pose1(
+		robot,
+		desired_robot_relative_pose.position.x,
+		desired_robot_relative_pose.position.y,
+		desired_robot_relative_pose.rotation.angle_z.degrees)
 
 if __name__ == '__main__':
 

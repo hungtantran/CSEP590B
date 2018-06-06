@@ -59,10 +59,10 @@ def get_distance_between_wheels():
 	# ####
 	# From the formula in class, we can derive that:
 	#   distance_between_wheels = (distance_left - distance_right) / angle
-	# After multiple tries, I got that running drive_wheels(50, 25, duration=6.4)
+	# After multiple tries, I got that running robot.drive_wheels(38, 25, duration=12)
 	# made the robot turn a right angle (90 degree, pi/2 radian)
-	# So distance_between_wheels = (50*6.4 - 25*6.4) / (pi/2)
-	pass
+	# So distance_between_wheels = (38*12 - 25*12) / (pi/2)
+	return 55
 
 def rotate_front_wheel(robot, angle_deg):
 	"""Rotates the front wheel of the robot by a desired angle.
@@ -70,9 +70,8 @@ def rotate_front_wheel(robot, angle_deg):
 		robot -- the Cozmo robot instance passed to the function
 		angle_deg -- Desired rotation of the wheel in degrees
 	"""
-	# ####
-	# TODO: Implement this function.
-	# ####
+	distance = float(angle_deg)/360 * (2 * math.pi * get_front_wheel_radius(robot))
+	cozmo_drive_straight(robot, distance, 40)
 
 def my_drive_straight(robot, dist, speed):
 	"""Drives the robot straight.
@@ -81,11 +80,8 @@ def my_drive_straight(robot, dist, speed):
 		dist -- Desired distance of the movement in millimeters
 		speed -- Desired speed of the movement in millimeters per second
 	"""
-	# ####
-	# TODO: Implement your version of a driving straight function using the
-	# robot.drive_wheels() function.
-	# ####
-	pass
+	duration = float(dist) / speed
+	robot.drive_wheels(speed, speed, duration=duration)
 
 def my_turn_in_place(robot, angle, speed):
 	"""Rotates the robot in place.
@@ -94,11 +90,12 @@ def my_turn_in_place(robot, angle, speed):
 		angle -- Desired distance of the movement in degrees
 		speed -- Desired speed of the movement in degrees per second
 	"""
-	# ####
-	# TODO: Implement your version of a rotating in place function using the
-	# robot.drive_wheels() function.
-	# ####
-	pass
+	angle_radian = float(angle) / 360 * 2 * math.pi
+	dist = angle_radian * get_distance_between_wheels()
+	duration = float(abs(angle)) / speed
+	drive_speed = dist / duration
+	print(duration, drive_speed, dist)
+	robot.drive_wheels(-drive_speed, drive_speed, duration=duration)
 
 def my_go_to_pose1(robot, x, y, angle_z):
 	"""Moves the robot to a pose relative to its current pose.
@@ -113,7 +110,19 @@ def my_go_to_pose1(robot, x, y, angle_z):
 	# include a sequence of turning in place, moving straight, and then turning
 	# again at the target to get to the desired rotation (Approach 1).
 	# ####
-	pass
+
+	# Turn to the target
+	turn_angle = math.degrees(math.atan(float(y)/x))
+	my_turn_in_place(robot, turn_angle, 5)
+	print("Turn angle = ", turn_angle)
+	# Move to the target
+	distance = math.sqrt(math.pow(x, 2) + math.pow(y, 2))
+	my_drive_straight(robot, distance, 10)
+	print("Drive straight = ", distance)
+	# Turn in place to desired heading
+	heading_angle = angle_z - turn_angle
+	my_turn_in_place(robot, heading_angle, 5)
+	print("Heading angle = ", heading_angle)
 
 def my_go_to_pose2(robot, x, y, angle_z):
 	"""Moves the robot to a pose relative to its current pose.
@@ -128,6 +137,7 @@ def my_go_to_pose2(robot, x, y, angle_z):
 	# robot to reduce distance between current and desired pose (Approach 2).
 	# ####
 	pass
+
 
 def my_go_to_pose3(robot, x, y, angle_z):
 	"""Moves the robot to a pose relative to its current pose.
